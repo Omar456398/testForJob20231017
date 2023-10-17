@@ -1,8 +1,14 @@
 import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, View, Text, Image } from "react-native";
+import { FlatList, StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { NavigationProp, ParamListBase } from '@react-navigation/native';
+import Image from 'react-native-scalable-image'
 
-export default function Hometab() {
+type HomeScreenProps = {
+  navigation: NavigationProp<ParamListBase>;
+};
+
+export default function Hometab({navigation}:HomeScreenProps) {
   const [totalPages, setTotalPages] = useState(1);
   const [moviesList, setMoviesList] = useState([] as MovieData[]);
   const [pageToLoad, setPageToLoad] = useState(1);
@@ -42,7 +48,9 @@ export default function Hometab() {
         data={moviesList}
         renderItem={({ item, index }) => {
           return (
+            <TouchableOpacity onPress={()=>navigation.navigate('Details', {item})}>
             <View key={index} style={styles.movieData}>
+              <View>
               <Image
                 style={styles.imagePoster}
                 source={{
@@ -51,12 +59,12 @@ export default function Hometab() {
                     item.poster_path,
                 }}
                 width={150}
-              />
+              /></View>
               <View style={styles.movieTextData}>
                 <Text style={styles.bold}>{item.title}</Text>
                 <Text>{item.overview}</Text>
               </View>
-            </View>
+            </View></TouchableOpacity>
           );
         }}
         ListFooterComponent={()=> {
@@ -99,6 +107,9 @@ const styles = StyleSheet.create({
   },
   imagePoster: {
     marginRight: 10,
+    borderRadius: 10,
+    borderColor: 'grey',
+    borderWidth: 1
   },
   listFooter: {
     textAlign: 'center'
