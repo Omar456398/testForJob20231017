@@ -3,16 +3,21 @@ import { FlatList, StyleSheet, View, Text, TouchableOpacity } from "react-native
 import { SafeAreaView } from "react-native-safe-area-context";
 import { NavigationProp, ParamListBase } from '@react-navigation/native';
 import Image from 'react-native-scalable-image'
+import { MovieData } from "./types";
+import { useSelector, useDispatch } from "react-redux";
+import { StateGlobal } from "../redux/reducers";
+import { ADD_DATA, REPLACE_DATA } from "../redux/actionNames";
 
 type HomeScreenProps = {
   navigation: NavigationProp<ParamListBase>;
 };
 
 export default function Hometab({navigation}:HomeScreenProps) {
-  const [totalPages, setTotalPages] = useState(1);
-  const [moviesList, setMoviesList] = useState([] as MovieData[]);
+  const dispatch = useDispatch()
+  const moviesList = useSelector((state: StateGlobal)=> state.data.data)
+  const totalPages = useSelector((state: StateGlobal)=> state.data.totalPages)
   const [pageToLoad, setPageToLoad] = useState(1);
-  const [loadinStatus, setLoadinStatus] = useState({
+  const [loadingStatus, setLoadingStatus] = useState({
     isError: false,
     message: "",
     isLoading: false,
@@ -21,16 +26,15 @@ export default function Hometab({navigation}:HomeScreenProps) {
     if (totalPages >= pageToLoad) {
       try {
         setPageToLoad((prev) => prev + 1);
-        setLoadinStatus({ isError: false, message: "", isLoading: true });
+        setLoadingStatus({ isError: false, message: "", isLoading: true });
         const response = await fetch(
           `https://api.themoviedb.org/3/movie/popular?api_key=94c01f7ec7fde0e9d839db0827c301d7&language=en-US&page=${pageToLoad}`
         );
         const responseJSON = await response.json();
-        setMoviesList(prev => [ ...(replace? []:prev), ...responseJSON.results]);
-        setTotalPages(responseJSON.total_pages);
-        setLoadinStatus({ isError: false, message: "", isLoading: false });
+        dispatch({type: replace ? REPLACE_DATA : ADD_DATA, payload: {data: responseJSON.results, totalPages: responseJSON.total_pages}})
+        setLoadingStatus({ isError: false, message: "", isLoading: false });
       } catch {
-        setLoadinStatus({
+        setLoadingStatus({
           isError: true,
           message: "Error, please swipe to reload!",
           isLoading: false,
@@ -68,15 +72,15 @@ export default function Hometab({navigation}:HomeScreenProps) {
           );
         }}
         ListFooterComponent={()=> {
-          if(loadinStatus.isLoading) {
+          if(loadingStatus.isLoading) {
             return <View><Text style={styles.listFooter}>Loading ...</Text></View>
           }
-          else if (loadinStatus.isError) {
-            return <View><Text style={[styles.bold,styles.error, styles.listFooter]}>{loadinStatus.message}</Text></View>
+          else if (loadingStatus.isError) {
+            return <View><Text style={[styles.bold,styles.error, styles.listFooter]}>{loadingStatus.message}</Text></View>
           }
         }}
         onEndReached={() => {getDataByPage()}}
-        onScroll={() =>{if(loadinStatus.isError){
+        onScroll={() =>{if(loadingStatus.isError){
           getDataByPage()
         }}}
         onEndReachedThreshold={0}

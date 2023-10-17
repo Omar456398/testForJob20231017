@@ -12,6 +12,7 @@ import {
   ParamListBase,
   RouteProp,
 } from "@react-navigation/native";
+import { MovieData } from "./types";
 
 type DetailsScreenParams = {
   params: { item: MovieData };

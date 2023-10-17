@@ -1,4 +1,4 @@
-type MovieData = {
+export type MovieData = {
     poster_path: string,
     title: string,
     overview: string,
