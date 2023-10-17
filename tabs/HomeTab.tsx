@@ -1,21 +1,32 @@
 import { useEffect, useState } from "react";
-import { FlatList, StyleSheet, View, Text, TouchableOpacity } from "react-native";
+import {
+  FlatList,
+  StyleSheet,
+  View,
+  Text,
+  TouchableOpacity,
+  ActivityIndicator,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { NavigationProp, ParamListBase } from '@react-navigation/native';
-import Image from 'react-native-scalable-image'
-import { MovieData } from "./types";
+import { NavigationProp, ParamListBase } from "@react-navigation/native";
+import Image from "react-native-scalable-image";
 import { useSelector, useDispatch } from "react-redux";
 import { StateGlobal } from "../redux/reducers";
 import { ADD_DATA, REPLACE_DATA } from "../redux/actionNames";
+import { useFonts } from "expo-font";
 
 type HomeScreenProps = {
   navigation: NavigationProp<ParamListBase>;
 };
 
-export default function Hometab({navigation}:HomeScreenProps) {
-  const dispatch = useDispatch()
-  const moviesList = useSelector((state: StateGlobal)=> state.data.data)
-  const totalPages = useSelector((state: StateGlobal)=> state.data.totalPages)
+export default function Hometab({ navigation }: HomeScreenProps) {
+  const [isFontLoaded] = useFonts({
+    KalamR: require('../fonts/Kalam-Regular.ttf'),
+    KalamB: require('../fonts/Kalam-Bold.ttf')
+  })
+  const dispatch = useDispatch();
+  const moviesList = useSelector((state: StateGlobal) => state.data.data);
+  const totalPages = useSelector((state: StateGlobal) => state.data.totalPages);
   const [pageToLoad, setPageToLoad] = useState(1);
   const [loadingStatus, setLoadingStatus] = useState({
     isError: false,
@@ -31,7 +42,13 @@ export default function Hometab({navigation}:HomeScreenProps) {
           `https://api.themoviedb.org/3/movie/popular?api_key=94c01f7ec7fde0e9d839db0827c301d7&language=en-US&page=${pageToLoad}`
         );
         const responseJSON = await response.json();
-        dispatch({type: replace ? REPLACE_DATA : ADD_DATA, payload: {data: responseJSON.results, totalPages: responseJSON.total_pages}})
+        dispatch({
+          type: replace ? REPLACE_DATA : ADD_DATA,
+          payload: {
+            data: responseJSON.results,
+            totalPages: responseJSON.total_pages,
+          },
+        });
         setLoadingStatus({ isError: false, message: "", isLoading: false });
       } catch {
         setLoadingStatus({
@@ -49,40 +66,59 @@ export default function Hometab({navigation}:HomeScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
       <FlatList
+        showsVerticalScrollIndicator={false}
         data={moviesList}
         renderItem={({ item, index }) => {
           return (
-            <TouchableOpacity onPress={()=>navigation.navigate('Details', {item})}>
-            <View key={index} style={styles.movieData}>
-              <View>
-              <Image
-                style={styles.imagePoster}
-                source={{
-                  uri:
-                    "https://www.themoviedb.org/t/p/w188_and_h282_bestv2" +
-                    item.poster_path,
-                }}
-                width={150}
-              /></View>
-              <View style={styles.movieTextData}>
-                <Text style={styles.bold}>{item.title}</Text>
-                <Text>{item.overview}</Text>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("Details", { item })}
+            >
+              <View key={index} style={styles.movieData}>
+                <View><View style={styles.imagePosterContainerOuter}><View style={styles.imagePosterContainer}>
+                  <Image
+                    style={styles.imagePoster}
+                    source={{
+                      uri:
+                        "https://www.themoviedb.org/t/p/w188_and_h282_bestv2" +
+                        item.poster_path,
+                    }}
+                    width={150}
+                  />
+                </View></View>
+                </View>
+                <View style={styles.movieTextData}>
+                  <Text style={styles.bold}>{item.title}</Text>
+                  <Text style={styles.nonbold}>{item.overview}</Text>
+                </View>
               </View>
-            </View></TouchableOpacity>
+            </TouchableOpacity>
           );
         }}
-        ListFooterComponent={()=> {
-          if(loadingStatus.isLoading) {
-            return <View><Text style={styles.listFooter}>Loading ...</Text></View>
-          }
-          else if (loadingStatus.isError) {
-            return <View><Text style={[styles.bold,styles.error, styles.listFooter]}>{loadingStatus.message}</Text></View>
+        ListFooterComponent={() => {
+          if (loadingStatus.isLoading) {
+            return (
+              <View>
+                <ActivityIndicator size="large" />
+              </View>
+            );
+          } else if (loadingStatus.isError) {
+            return (
+              <View>
+                <Text style={[styles.bold, styles.error, styles.listFooter]}>
+                  {loadingStatus.message}
+                </Text>
+              </View>
+            );
           }
         }}
-        onEndReached={() => {getDataByPage()}}
-        onScroll={() =>{if(loadingStatus.isError){
-          getDataByPage()
-        }}}
+        onEndReached={() => {
+          getDataByPage();
+        }}
+        onScroll={() => {
+          if (loadingStatus.isError) {
+            getDataByPage();
+          }
+        }}
         onEndReachedThreshold={0}
       />
     </SafeAreaView>
@@ -100,22 +136,40 @@ const styles = StyleSheet.create({
     flexDirection: "row",
   },
   movieTextData: {
-    flexShrink: 1
+    flexShrink: 1,
   },
   bold: {
-    fontWeight: "700",
+    fontFamily: "KalamB",
+    fontSize: 16,
+  },
+  nonbold: {
+    fontFamily: "KalamR",
   },
   error: {
-    color: 'red',
-    marginBottom: 30
+    color: "red",
+    marginBottom: 30,
+  },
+  imagePosterContainer: {
+    borderRadius: 15,
+    borderColor: "grey",
+    borderWidth: 5,
+    borderStyle: "dashed",
+  },
+  imagePosterContainerOuter: {
+    marginRight: 10,
+    borderRadius: 17,
+    borderWidth: 1,
+    borderColor: "grey",
   },
   imagePoster: {
-    marginRight: 10,
     borderRadius: 10,
-    borderColor: 'grey',
-    borderWidth: 1
+    borderWidth: 1,
+    borderColor: "grey",
+  },
+  text: {
+    fontFamily: "",
   },
   listFooter: {
-    textAlign: 'center'
-  }
+    textAlign: "center",
+  },
 });
